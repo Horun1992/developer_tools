@@ -7,6 +7,7 @@ import (
 )
 
 func RegisterRoutes() {
+	http.HandleFunc("/", serveFile("web/main.html"))
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
 	// Push routes

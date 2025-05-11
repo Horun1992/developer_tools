@@ -1,4 +1,4 @@
-async function authorizedFetch(url, options = {}) {
+async function ensureAuth() {
     let user = localStorage.getItem("authUser");
     let pass = localStorage.getItem("authPass");
 
@@ -12,6 +12,13 @@ async function authorizedFetch(url, options = {}) {
         localStorage.setItem("authUser", user);
         localStorage.setItem("authPass", pass);
     }
+}
+
+async function authorizedFetch(url, options = {}) {
+    await ensureAuth();
+
+    const user = localStorage.getItem("authUser");
+    const pass = localStorage.getItem("authPass");
 
     const headers = {
         ...options.headers,
@@ -31,22 +38,11 @@ async function authorizedFetch(url, options = {}) {
     return response;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const user = localStorage.getItem("authUser");
-    const pass = localStorage.getItem("authPass");
-
-    if (!user || !pass || user === "null" || pass === "null") {
-        const username = prompt("Введите логин:");
-        const password = prompt("Введите пароль:");
-        if (username && password) {
-            localStorage.setItem("authUser", username);
-            localStorage.setItem("authPass", password);
-        } else {
-            alert("Авторизация обязательна");
-            location.reload();
-            return;
-        }
+document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        await ensureAuth();
+        document.getElementById("pageContent").style.display = "";
+    } catch (_) {
+        // авторизация не выполнена — оставляем страницу скрытой
     }
-
-    document.getElementById("pageContent").style.display = "";
 });
