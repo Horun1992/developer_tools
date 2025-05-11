@@ -12,6 +12,8 @@ var password = os.Getenv("DEV_PASS")
 func BasicAuth(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, pass, ok := r.BasicAuth()
+		log.Printf("🔒 BasicAuth: env user='%s' pass='%s'\n", username, pass)
+		log.Printf("🔒 BasicAuth: selected user='%s' pass='%s'\n", user, pass)
 		if !ok {
 			log.Println("🔒 BasicAuth: no auth header provided")
 		} else if user == "" || pass == "" {
