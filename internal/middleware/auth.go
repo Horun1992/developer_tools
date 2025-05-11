@@ -3,11 +3,15 @@ package middleware
 import (
 	"log"
 	"net/http"
-	"os"
 )
 
-var username = os.Getenv("DEV_USER")
-var password = os.Getenv("DEV_PASS")
+var username = ""
+var password = ""
+
+func InitMiddleware(user string, pass string) {
+	username = user
+	password = pass
+}
 
 func BasicAuth(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 	"developers_tools/internal/handlers"
+	"developers_tools/internal/middleware"
 	"fmt"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -13,7 +14,7 @@ import (
 
 var DB *sql.DB
 
-func Start(routes func(), addr string) {
+func Start(registerRoutes func(), addr string) {
 	loadEnv(".env")
 
 	env := getRequiredEnvVars([]string{
@@ -27,13 +28,14 @@ func Start(routes func(), addr string) {
 	})
 
 	dsn := buildDSN(env)
-
 	DB = initDB(dsn)
 
+	middleware.InitMiddleware(env["DEV_USER"], env["DEV_PASS"])
 	handlers.InitPlateHandler(DB)
-	routes()
 
-	fmt.Printf("🔥 Server started on http://%s\n", addr)
+	registerRoutes()
+
+	fmt.Printf("🔥 Server started on https://dev.e-mcg.ru")
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
