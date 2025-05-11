@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadConditionDefaults() {
-  const res = await authorizedFetch('/static/conditions.txt');
+  const res = await fetch('/static/conditions.txt');
   const text = await res.text();
   const lines = text.split('\n');
   const selKey = document.getElementById("plateConditionKey");
@@ -151,7 +151,7 @@ document.getElementById("plateForm").addEventListener("submit", async function (
   const confirmed = confirm("Отправить Plate?\n" + JSON.stringify(plate, null, 2));
   if (!confirmed) return;
 
-  const res = await authorizedFetch("/save_plate", {
+  const res = await fetch("/save_plate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -171,7 +171,7 @@ function loadPlateHistory() {
   const panel = document.getElementById("historyPanel");
   panel.innerHTML = "Загрузка...";
 
-  authorizedFetch("/plate_history")
+  fetch("/plate_history")
     .then(res => res.json())
     .then(list => {
       if (!list) return;
@@ -288,7 +288,7 @@ window.fillForm = fillForm;
 
 async function deletePlate(plateId) {
   if (!confirm("Удалить Plate " + plateId + "?")) return;
-  const res = await authorizedFetch("/delete_plate", {
+  const res = await fetch("/delete_plate", {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json"

@@ -1,7 +1,7 @@
 const appVersions = [];
 
 async function loadVersionHistoryFromServer() {
-  const res = await authorizedFetch("/version_history");
+  const res = await fetch("/version_history");
   const history = await res.json(); // массив строк
   const container = document.getElementById("versionHistoryForm");
   container.innerHTML = "";
@@ -55,7 +55,7 @@ function toggleAllVersions(masterCheckbox) {
 }
 
 async function saveVersionToServer(ver) {
-  await authorizedFetch("/version_history", {
+  await fetch("/version_history", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -135,7 +135,7 @@ async function removeVersionPrompt() {
 
   // Удаляем версию на сервере, если нужно
   try {
-    await authorizedFetch("/version_history", {
+    await fetch("/version_history", {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json"
@@ -252,7 +252,7 @@ async function loadHistory() {
   const panel = document.getElementById("historyPanel");
   panel.innerHTML = "Загрузка...";
   try {
-    const res = await authorizedFetch("/history.json");
+    const res = await fetch("/history.json");
     const data = await res.json();
     if (!Array.isArray(data)) throw new Error("Некорректный формат истории");
 
@@ -262,7 +262,7 @@ async function loadHistory() {
     clearBtn.textContent = "Очистить";
     clearBtn.onclick = async () => {
       if (confirm("Очистить историю?")) {
-        await authorizedFetch("/history.json", {
+        await fetch("/history.json", {
           method: "DELETE"
         });
         toggleHistory();
@@ -389,7 +389,7 @@ document.getElementById("pushForm").addEventListener("submit", async function (e
   if (!confirmed) return;
 
   try {
-    await authorizedFetch("/send_push", {
+    await fetch("/send_push", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
