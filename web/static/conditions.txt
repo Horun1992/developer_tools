@@ -1,0 +1,8 @@
+first_step=0
+step=0
+date=20220315
+force=true
+repeat=1
+user=debug
+version=(<=|>=|==|<|>):1.0.0
+version_code=(<=|>=|==|<|>):61

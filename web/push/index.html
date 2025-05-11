@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Push Only</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+.tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-left: 6px;
+}
+
+.tooltip-icon {
+  width: 18px;
+  height: 18px;
+  background-color: #dc3545;
+  color: white;
+  font-weight: bold;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 50%;
+  cursor: default;
+  display: inline-block;
+}
+
+.tooltip-box {
+  display: none;
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 100;
+}
+
+.tooltip-wrapper:hover .tooltip-box {
+  display: block;
+}
+  </style>
+  <script src="/static/auth.js" defer></script>
+  <script src="/push/script.js" defer></script>
+</head>
+<body style="display:none;" id="pageContent">
+<div class="container">
+  <h2>Отправка Push</h2>
+  <form id="pushForm">
+    <label>Тип сборки</label>
+    <select id="buildType">
+      <option value="debug">Дебаг</option>
+      <option value="release">Релиз</option>
+    </select>
+
+    <div class="lang-group" id="titleGroup" data-type="title">
+      <label>Заголовок (RU)</label>
+      <textarea id="title_ru" placeholder="Введите заголовок на русском"></textarea>
+      <button type="button" class="add-btn" onclick="addTitleLanguage()">+ Добавить язык</button>
+    </div>
+
+    <div class="lang-group" id="bodyGroup" data-type="body">
+      <label>Сообщение (RU)</label>
+      <textarea id="body_ru" placeholder="Введите сообщение на русском"></textarea>
+      <button type="button" class="add-btn" onclick="addBodyLanguage()">+ Добавить язык</button>
+    </div>
+
+    <label>Ссылка на изображение</label>
+    <input type="text" id="image">
+
+    <label>Приоритет push</label>
+    <select id="priority">
+      <option value="high" selected>High</option>
+      <option value="normal">Normal</option>
+    </select>
+
+    <label>Версия приложения</label>
+    <div class="lang-group">
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <button type="button" onclick="openVersionPrompt()" style="flex: 1;">+ Добавить версию</button>
+        <button type="button" onclick="removeVersionPrompt()" style="flex: 1;">− Удалить версию</button>
+      </div>
+      <div id="versionSummary" style="margin-top: 8px; font-weight: bold;"></div>
+
+      <div style="margin-top: 10px;">
+        <b>Доступные версии:</b>
+        <div class="checkbox-group" style="margin-top: 8px;">
+          <input type="checkbox" id="selectAllVersions" onchange="toggleAllVersions(this)">
+          <label for="selectAllVersions">Отметить все</label>
+        </div>
+        <div id="versionHistoryForm" style="margin-top: 6px;"></div>
+      </div>
+
+      <div id="appVersionList" style="margin-top: 12px;"></div>
+    </div>
+    <input type="hidden" id="pushConditions" value=''>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="includeSound">
+      <label for="includeSound">Включить звук</label>
+      <div class="tooltip-wrapper">
+        <div class="tooltip-icon">?</div>
+        <div class="tooltip-box">Звук можно отключить, только если приложение активно (находится в фоне). В остальных случаях звук включается автоматически системой.</div>
+      </div>
+    </div>
+
+    <button type="submit">Отправить</button>
+  </form>
+
+  <button id="toggleHistoryButton" onclick="toggleHistory()">Показать историю</button>
+  <div id="historyPanel"></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Plate Editor</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/auth.js" defer></script>
+  <script src="/plate/script.js" defer></script>
+</head>
+<body style="display:none;" id="pageContent">
+<div class="container">
+  <h2>Plate</h2>
+  <form id="plateForm">
+    <label>ID Plate</label>
+    <input type="text" id="plateId" placeholder="Введите ID Plate" required>
+
+    <div class="lang-group" id="titleGroup">
+      <label>Заголовок (RU)</label>
+      <textarea id="title_ru" required></textarea>
+
+      <button type="button" class="add-btn" onclick="addTitleLanguage()">+ Добавить язык</button>
+    </div>
+
+    <div class="lang-group" id="bodyGroup" data-type="title">
+      <label>Сообщение (RU)</label>
+      <textarea id="body_ru" placeholder="Введите сообщение на русском" required></textarea>
+      <button type="button" class="add-btn" onclick="addBodyLanguage()">+ Добавить язык</button>
+    </div>
+
+
+    <div class="lang-group" id="actionLangGroup" data-type="action">
+      <label>Action URL</label>
+      <input type="text" id="action" placeholder="Введите ссылку">
+
+      <label style="margin-top:12px;">Текст кнопки (RU)</label>
+      <input type="text" id="action_title_ru">
+
+      <button type="button" class="add-btn" onclick="addActionTitleLanguage()" style="margin-top:8px;">
+        + Добавить язык
+      </button>
+    </div>
+
+    <label>Ссылка на иконку</label>
+    <input type="text" id="icon_url">
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="withCloseBtn" checked>
+      <label for="withCloseBtn">Показать кнопку закрытия</label>
+    </div>
+
+    <label>Условия</label>
+    <div id="plateConditionBuilder" class="lang-group">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:nowrap; overflow-x:auto;">
+        <select id="plateConditionKey"></select>
+        <select id="plateConditionOperator" style="display:none; max-width: 80px;"></select>
+        <input type="text" id="plateConditionValue" placeholder="значение">
+        <button type="button" onclick="addPlateCondition()">Добавить</button>
+      </div>
+      <div id="plateConditionList" style="margin-top: 10px;"></div>
+    </div>
+    <input type="hidden" id="plateConditions" value='{}'>
+
+    <button type="submit">Сохранить Plate</button>
+  </form>
+
+  <button onclick="loadPlateHistory()">Показать историю</button>
+  <div id="historyPanel"></div>
+</div>
+</body>
+</html>

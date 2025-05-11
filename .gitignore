@@ -1,0 +1,6 @@
+/.env
+/.idea/
+/firebase-debug.json
+/firebase-release.json
+/logs/push.log
+/version_history.json
