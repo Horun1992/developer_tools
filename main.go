@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	server.Start(func() { server.MainHandler() }, "127.0.0.1:5100")
+	server.Start(func() { server.RegisterRoutes() }, "127.0.0.1:5100")
 }
