@@ -2,7 +2,7 @@ module developers_tools
 
 go 1.23.0
 
-toolchain go1.23.8
+toolchain go1.24.3
 
 require (
 	github.com/joho/godotenv v1.5.1

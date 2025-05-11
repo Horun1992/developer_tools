@@ -10,12 +10,11 @@ import (
 
 var db *sql.DB
 
-// InitPlateHandler инициализирует зависимости
 func InitPlateHandler(database *sql.DB) {
 	db = database
 }
 
-func PushPlateHandler(w http.ResponseWriter, r *http.Request) {
+func SavePlateHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return

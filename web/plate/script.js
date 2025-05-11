@@ -151,7 +151,7 @@ document.getElementById("plateForm").addEventListener("submit", async function (
   const confirmed = confirm("Отправить Plate?\n" + JSON.stringify(plate, null, 2));
   if (!confirmed) return;
 
-  const res = await authorizedFetch("/push_plate", {
+  const res = await authorizedFetch("/save_plate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
