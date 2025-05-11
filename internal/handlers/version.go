@@ -2,12 +2,28 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 )
 
+func ensureVersionHistoryFile(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		emptyJSON := []byte("{}")
+		return os.WriteFile(path, emptyJSON, 0644)
+	}
+	return nil
+}
+
 func VersionHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	const filePath = "version_history.json"
+
+	if err := ensureVersionHistoryFile(filePath); err != nil {
+		log.Printf("❌ Не удалось создать файл: %v", err)
+		http.Error(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+
 	switch r.Method {
 	case http.MethodGet:
 		data, err := os.ReadFile(filePath)
