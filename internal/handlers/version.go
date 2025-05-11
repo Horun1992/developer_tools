@@ -9,7 +9,7 @@ import (
 
 func ensureVersionHistoryFile(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		emptyJSON := []byte("{}")
+		emptyJSON := []byte("[]")
 		return os.WriteFile(path, emptyJSON, 0644)
 	}
 	return nil
