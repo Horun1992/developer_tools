@@ -252,7 +252,7 @@ async function loadHistory() {
   const panel = document.getElementById("historyPanel");
   panel.innerHTML = "Загрузка...";
   try {
-    const res = await fetch("/history.json");
+    const res = await fetch("/push_history.json");
     const data = await res.json();
     if (!Array.isArray(data)) throw new Error("Некорректный формат истории");
 
@@ -262,7 +262,7 @@ async function loadHistory() {
     clearBtn.textContent = "Очистить";
     clearBtn.onclick = async () => {
       if (confirm("Очистить историю?")) {
-        await fetch("/history.json", {
+        await fetch("/push_history.json", {
           method: "DELETE"
         });
         toggleHistory();

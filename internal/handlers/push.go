@@ -2,11 +2,10 @@ package handlers
 
 import (
 	"bytes"
-	handlers "developers_tools/internal/utils"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -22,16 +21,62 @@ var (
 	releaseKeyFile = "firebase-release.json"
 )
 
-func PushHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+func SendPushHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		handlePushPost(w, r)
+	default:
+		handlePushNotAllowed(w)
+	}
+}
+
+func handlePushPost(w http.ResponseWriter, r *http.Request) {
+	req, projectID, token, data, titleMap, bodyMap, err := preparePushRequest(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	topics := generateTopics(data)
+	successTopics := []string{}
+	var lastResp map[string]interface{}
+
+	for _, topic := range topics {
+		localTitle := titleMap[getLang(topic)]
+		localBody := bodyMap[getLang(topic)]
+
+		message := buildMessage(topic, localTitle, localBody, data, projectID)
+		msgBody, _ := json.Marshal(message)
+
+		fmt.Printf("📦 Отправка в топик %s:\n%s\n", topic, msgBody)
+		resp, err := sendFCMRequest(projectID, token.AccessToken, msgBody)
+		if resp != nil {
+			defer resp.Body.Close()
+		}
+
+		if err == nil && resp.StatusCode == 200 {
+			successTopics = append(successTopics, topic)
+		}
+		json.NewDecoder(resp.Body).Decode(&lastResp)
+
+		msgID, _ := lastResp["name"].(string)
+		SaveHistoryEntry(map[string]interface{}{
+			"timestamp":  time.Now().Unix(),
+			"payload":    req,
+			"success":    err == nil && resp.StatusCode == 200,
+			"topic":      topic,
+			"title":      localTitle,
+			"message_id": msgID,
+		})
+	}
+
+	writePushResponse(w, successTopics, lastResp)
+}
+
+func preparePushRequest(r *http.Request) (map[string]interface{}, string, *oauth2.Token, map[string]string, map[string]string, map[string]string, error) {
 	var req map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), 400)
-		return
+		return nil, "", nil, nil, nil, nil, err
 	}
 
 	buildType, _ := req["build_type"].(string)
@@ -39,29 +84,34 @@ func PushHandler(w http.ResponseWriter, r *http.Request) {
 		buildType = "debug"
 	}
 	projectID := projectIDs[buildType]
-	var keyFile string
+	keyFile := debugKeyFile
 	if buildType == "release" {
 		keyFile = releaseKeyFile
-	} else {
-		keyFile = debugKeyFile
 	}
 
 	creds, err := os.ReadFile(keyFile)
 	if err != nil {
-		http.Error(w, "failed to read credentials: "+err.Error(), 500)
-		return
+		return nil, "", nil, nil, nil, nil, fmt.Errorf("failed to read credentials: %v", err)
 	}
 	conf, err := google.JWTConfigFromJSON(creds, "https://www.googleapis.com/auth/firebase.messaging")
 	if err != nil {
-		http.Error(w, "failed to parse credentials: "+err.Error(), 500)
-		return
+		return nil, "", nil, nil, nil, nil, fmt.Errorf("failed to parse credentials: %v", err)
 	}
 	token, err := conf.TokenSource(r.Context()).Token()
 	if err != nil {
-		http.Error(w, "failed to get token: "+err.Error(), 500)
-		return
+		return nil, "", nil, nil, nil, nil, fmt.Errorf("failed to get token: %v", err)
 	}
 
+	data := extractPushData(req)
+	titleMap, _ := decodeLangMap(req["title"])
+	bodyMap, _ := decodeLangMap(req["body"])
+	normalizeLanguages(titleMap)
+	normalizeLanguages(bodyMap)
+
+	return req, projectID, token, data, titleMap, bodyMap, nil
+}
+
+func extractPushData(req map[string]interface{}) map[string]string {
 	data := make(map[string]string)
 	if rawData, ok := req["data"].(map[string]interface{}); ok {
 		for k, v := range rawData {
@@ -77,40 +127,35 @@ func PushHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	return data
+}
 
-	var titleMap, bodyMap map[string]string
-	if raw, ok := req["title"].(string); ok && raw != "" {
-		_ = json.Unmarshal([]byte(raw), &titleMap)
-	}
-	if raw, ok := req["body"].(string); ok && raw != "" {
-		_ = json.Unmarshal([]byte(raw), &bodyMap)
-	}
-
-	if ru, ok := titleMap["ru"]; ok {
-		if _, exists := titleMap["en"]; !exists {
-			titleMap["en"] = ru
-		}
-		if _, exists := titleMap["tj"]; !exists {
-			titleMap["tj"] = ru
+func decodeLangMap(raw any) (map[string]string, error) {
+	res := make(map[string]string)
+	if str, ok := raw.(string); ok && str != "" {
+		if err := json.Unmarshal([]byte(str), &res); err != nil {
+			return nil, err
 		}
 	}
-	if ru, ok := bodyMap["ru"]; ok {
-		if _, exists := bodyMap["en"]; !exists {
-			bodyMap["en"] = ru
+	return res, nil
+}
+
+func normalizeLanguages(m map[string]string) {
+	if ru, ok := m["ru"]; ok {
+		if _, exists := m["en"]; !exists {
+			m["en"] = ru
 		}
-		if _, exists := bodyMap["tj"]; !exists {
-			bodyMap["tj"] = ru
+		if _, exists := m["tj"]; !exists {
+			m["tj"] = ru
 		}
 	}
+}
 
-	successTopics := []string{}
-	var lastResp map[string]interface{}
-
+func generateTopics(data map[string]string) []string {
 	var conditions map[string]string
 	if condRaw, ok := data["conditions"]; ok && condRaw != "" && condRaw != "{}" {
 		_ = json.Unmarshal([]byte(condRaw), &conditions)
 	}
-
 	var topics []string
 	if versionsStr, ok := conditions["version"]; ok && versionsStr != "" {
 		for _, version := range strings.Split(versionsStr, ",") {
@@ -122,78 +167,55 @@ func PushHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		topics = []string{"ru", "en", "tj"}
 	}
+	return topics
+}
 
-	for _, topic := range topics {
-		parts := strings.Split(topic, "_")
-		lang := topic
-		if len(parts) == 2 {
-			lang = parts[1]
+func getLang(topic string) string {
+	parts := strings.Split(topic, "_")
+	if len(parts) == 2 {
+		return parts[1]
+	}
+	return topic
+}
+
+func buildMessage(topic, title, body string, data map[string]string, projectID string) map[string]interface{} {
+	notif := map[string]interface{}{"channel_id": "GENERAL"}
+	if s, ok := data["sound"]; ok {
+		if s != "none" && s != "" {
+			notif["sound"] = s
 		}
-		localTitle := titleMap[lang]
-		localBody := bodyMap[lang]
-
-		notif := map[string]interface{}{
-			"channel_id": "GENERAL",
-		}
-		if s, ok := req["data"].(map[string]interface{})["sound"]; ok {
-			str, _ := s.(string)
-			if str != "none" && str != "" {
-				data["sound"] = str
-				notif["sound"] = str
-			}
-		}
-
-		priority := "high"
-		if p, ok := data["priority"]; ok {
-			priority = p
-		}
-
-		message := map[string]interface{}{
-			"message": map[string]interface{}{
-				"topic": topic,
-				"notification": map[string]interface{}{
-					"title": localTitle,
-					"body":  localBody,
-					"image": data["image"],
-				},
-				"android": map[string]interface{}{
-					"priority":     priority,
-					"notification": notif,
-				},
-				"data": data,
-			},
-		}
-
-		msgBody, _ := json.Marshal(message)
-		fmt.Printf("📦 Отправка в топик %s:\n%s\n", topic, msgBody)
-
-		url := fmt.Sprintf("https://fcm.googleapis.com/v1/projects/%s/messages:send", projectID)
-		httpReq, _ := http.NewRequest("POST", url, io.NopCloser(bytes.NewReader(msgBody)))
-		httpReq.Header.Set("Authorization", "Bearer "+token.AccessToken)
-		httpReq.Header.Set("Content-Type", "application/json")
-
-		resp, err := http.DefaultClient.Do(httpReq)
-		if resp != nil {
-			defer resp.Body.Close()
-		}
-
-		if err == nil && resp.StatusCode == 200 {
-			successTopics = append(successTopics, topic)
-		}
-		json.NewDecoder(resp.Body).Decode(&lastResp)
-
-		msgID, _ := lastResp["name"].(string)
-		entry := map[string]interface{}{
-			"timestamp":  time.Now().Unix(),
-			"payload":    req,
-			"success":    err == nil && resp.StatusCode == 200,
-			"topic":      topic,
-			"title":      localTitle,
-			"message_id": msgID,
-		}
-		handlers.SaveHistoryEntry(entry)
+	}
+	priority := "high"
+	if p, ok := data["priority"]; ok {
+		priority = p
 	}
 
+	return map[string]interface{}{
+		"message": map[string]interface{}{
+			"topic": topic,
+			"notification": map[string]interface{}{
+				"title": title,
+				"body":  body,
+				"image": data["image"],
+			},
+			"android": map[string]interface{}{
+				"priority":     priority,
+				"notification": notif,
+			},
+			"data": data,
+		},
+	}
+}
+
+func sendFCMRequest(projectID, token string, body []byte) (*http.Response, error) {
+	url := fmt.Sprintf("https://fcm.googleapis.com/v1/projects/%s/messages:send", projectID)
+	req, _ := http.NewRequest("POST", url, bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	return http.DefaultClient.Do(req)
+}
+
+func writePushResponse(w http.ResponseWriter, successTopics []string, lastResp map[string]interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	if len(successTopics) > 0 {
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -202,7 +224,7 @@ func PushHandler(w http.ResponseWriter, r *http.Request) {
 			"message": lastResp["name"],
 		})
 	} else {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		errMsg := "Unknown error"
 		status := "FAILED"
 		if errMap, ok := lastResp["error"].(map[string]interface{}); ok {
@@ -214,4 +236,8 @@ func PushHandler(w http.ResponseWriter, r *http.Request) {
 			"error":  errMsg,
 		})
 	}
+}
+
+func handlePushNotAllowed(w http.ResponseWriter) {
+	http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 }

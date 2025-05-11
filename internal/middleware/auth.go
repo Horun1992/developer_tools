@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 )
 
@@ -23,7 +22,6 @@ func BasicAuth(handler http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		log.Printf("✅ BasicAuth: authorized user='%s'\n", user)
 		handler(w, r)
 	}
 }
