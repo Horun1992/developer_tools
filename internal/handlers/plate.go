@@ -55,8 +55,8 @@ func SavePlateHandler(w http.ResponseWriter, r *http.Request) {
 
 	query := `
 	INSERT INTO plates 
-	(plate_id, title, body, action, action_title, icon_url, with_close_btn, conditions)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	(plate_id, title, body, action, action_title, icon_url, with_close_btn, conditions, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	ON CONFLICT (plate_id) DO UPDATE SET
 		title = EXCLUDED.title,
 		body = EXCLUDED.body,
@@ -72,6 +72,7 @@ func SavePlateHandler(w http.ResponseWriter, r *http.Request) {
 	actionTitleJSON, _ := json.Marshal(plate.ActionTitle)
 	conditionsJSON, _ := json.Marshal(plate.Conditions)
 
+	createdAt := time.Now()
 	_, err := db.Exec(query,
 		plate.PlateID,
 		titleJSON,
@@ -81,6 +82,7 @@ func SavePlateHandler(w http.ResponseWriter, r *http.Request) {
 		plate.IconURL,
 		plate.WithCloseBtn,
 		conditionsJSON,
+		createdAt,
 	)
 	if err != nil {
 		http.Error(w, "db error: "+err.Error(), http.StatusInternalServerError)
