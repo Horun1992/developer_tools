@@ -373,9 +373,13 @@ document.getElementById("pushForm").addEventListener("submit", async function (e
         sound,
         priority
     };
-
     if (pushConditions) {
         data["conditions"] = pushConditions;
+    }
+    // Include bank filter if provided
+    const bankId = document.getElementById("bankId").value.trim();
+    if (bankId) {
+        data["favorite_bank"] = bankId;
     }
 
     const payload = {

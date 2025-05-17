@@ -164,28 +164,51 @@ func normalizeLanguages(m map[string]string) {
 }
 
 func generateTopics(data map[string]string) []string {
-	var conditions map[string]string
-	if condRaw, ok := data[keyConditions]; ok && condRaw != "" && condRaw != "{}" {
-		_ = json.Unmarshal([]byte(condRaw), &conditions)
-	}
 	var topics []string
-	if versionsStr, ok := conditions["version"]; ok && versionsStr != "" {
-		for _, version := range strings.Split(versionsStr, ",") {
-			version = strings.TrimSpace(version)
-			for _, lang := range []string{LangRU, LangEN, LangTJ} {
-				topics = append(topics, fmt.Sprintf("%s_%s", version, lang))
+	versions := []string{}
+	if raw, ok := data[keyConditions]; ok && raw != "" && raw != "{}" {
+		var cond map[string]string
+		_ = json.Unmarshal([]byte(raw), &cond)
+		if vs, ok := cond["version"]; ok {
+			for _, v := range strings.Split(vs, ",") {
+				versions = append(versions, strings.TrimSpace(v))
 			}
 		}
-	} else {
-		topics = []string{LangRU, LangEN, LangTJ}
 	}
+	bank, hasBank := data["favorite_bank"]
+	langs := []string{LangRU, LangEN, LangTJ}
+
+	switch {
+	case len(versions) == 0 && !hasBank:
+		topics = langs
+
+	case len(versions) > 0 && !hasBank:
+		for _, ver := range versions {
+			for _, lang := range langs {
+				topics = append(topics, fmt.Sprintf("%s_%s", ver, lang))
+			}
+		}
+
+	case len(versions) == 0 && hasBank:
+		for _, lang := range langs {
+			topics = append(topics, fmt.Sprintf("%s_%s", bank, lang))
+		}
+
+	case len(versions) > 0 && hasBank:
+		for _, ver := range versions {
+			for _, lang := range langs {
+				topics = append(topics, fmt.Sprintf("%s_%s_%s", bank, ver, lang))
+			}
+		}
+	}
+
 	return topics
 }
 
 func getLang(topic string) string {
 	parts := strings.Split(topic, "_")
-	if len(parts) == 2 {
-		return parts[1]
+	if len(parts) > 1 {
+		return parts[len(parts)-1]
 	}
 	return topic
 }
