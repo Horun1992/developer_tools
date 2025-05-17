@@ -1,6 +1,6 @@
 first_step=0
 step=0
-date=20220315
+date=(<=|>=|==|<|>):20250516
 force=true
 repeat=1
 user=debug

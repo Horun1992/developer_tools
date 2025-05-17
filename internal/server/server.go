@@ -12,25 +12,29 @@ import (
 	"os"
 )
 
+const (
+	devUser = "DEV_USER"
+	devPass = "DEV_PASS"
+	dbName  = "DATABASE_NAME"
+	dbUser  = "DATABASE_USER"
+	dbPass  = "DATABASE_PASSWORD"
+	dbHost  = "DATABASE_HOST"
+	dbPort  = "DATABASE_PORT"
+)
+
 var DB *sql.DB
 
 func Start(registerRoutes func(), addr string) {
 	loadEnv(".env")
 
 	env := getRequiredEnvVars([]string{
-		"DEV_USER",
-		"DEV_PASS",
-		"DATABASE_NAME",
-		"DATABASE_USER",
-		"DATABASE_PASSWORD",
-		"DATABASE_HOST",
-		"DATABASE_PORT",
+		devUser, devPass, dbName, dbUser, dbPass, dbHost, dbPort,
 	})
 
 	dsn := buildDSN(env)
 	DB = initDB(dsn)
 
-	middleware.InitMiddleware(env["DEV_USER"], env["DEV_PASS"])
+	middleware.InitMiddleware(env[devUser], env[devPass])
 	handlers.InitPlateHandler(DB)
 
 	registerRoutes()
@@ -54,11 +58,11 @@ func getRequiredEnvVars(keys []string) map[string]string {
 func buildDSN(env map[string]string) string {
 	return fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		env["DATABASE_USER"],
-		env["DATABASE_PASSWORD"],
-		env["DATABASE_HOST"],
-		env["DATABASE_PORT"],
-		env["DATABASE_NAME"],
+		env[dbUser],
+		env[dbPass],
+		env[dbHost],
+		env[dbPort],
+		env[dbName],
 	)
 }
 

@@ -91,3 +91,287 @@ button:hover {
     margin-bottom: 16px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
+
+
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+  vertical-align: middle;
+  margin-top: 1px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: 0.2s;
+  border-radius: 18px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: 0.2s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #4caf50;
+}
+
+input:checked + .slider:before {
+  transform: translateX(14px);
+}
+
+.delete-icon {
+    cursor: pointer;
+    color: red;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.plate-wrapper {
+  position: relative;
+  padding: 0 16px;
+}
+
+.plate-title-row {
+  font-weight: bold;
+  font-size: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.plate-preview {
+  background: #f9f9f9;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.plate-content-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    border-radius: 8px;
+}
+
+.plate-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.plate-text-block {
+  flex: 1;
+}
+
+.plate-button-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+ .plate-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+.slider {
+    background-color: #d0d0d0;
+}
+
+.plate-actions-left,
+.plate-actions-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.plate-actions-right {
+  margin-right: 8px;
+}
+
+.plate-json {
+  display: none;
+  background: #f9f9f9;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.plate-lang-select {
+  width: auto;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.plate-lang-select-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+
+.plate-preview .plate-button {
+  width: auto;
+  align-self: flex-end;
+}
+
+.plate-title {
+    font-weight: bold;
+    font-size: 18px;
+    margin-top: 16px;
+    margin-bottom: 10px;
+}
+
+.plate-header-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-left: 8px;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.plate-active-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.plate-active-indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.plate-active-indicator.active {
+    background-color: #4caf50;
+}
+
+.plate-active-indicator.inactive {
+    background-color: #ff2727;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #121212;
+        color: #f0f0f0;
+    }
+
+    .container {
+        background: #1a1a1a;
+        box-shadow: 0 2px 10px rgba(255, 255, 255, 0.05);
+    }
+
+    input, textarea, select, button {
+        background-color: #1e1e1e;
+        color: #f0f0f0;
+        border: 1px solid #444;
+    }
+
+    .lang-group {
+        background: #222;
+        border-color: #555;
+    }
+
+    .plate-card {
+        background: #2a2a2a;
+        border-color: #555;
+        box-shadow: 0 1px 4px rgba(255,255,255,0.05);
+    }
+
+    .plate-title-row,
+    .plate-body {
+        color: #f0f0f0 !important;
+    }
+
+    .plate-json {
+        background: #1e1e1e !important;
+        color: #d0d0d0 !important;
+    }
+
+    .plate-button, .history-item-buttons button {
+        background-color: #333;
+        color: #f0f0f0;
+        border: 1px solid #555;
+    }
+
+    pre {
+        background-color: #1e1e1e;
+        color: #d0d0d0;
+    }
+
+    .plate-content-row {
+        background-color: #1e1e1e;
+    }
+
+    .plate-actions {
+        background: #1e1e1e;
+    }
+
+    .plate-preview {
+        background: #1e1e1e ;
+        color: #f0f0f0;
+    }
+
+    .slider {
+        background-color: #555555;
+    }
+
+}
+
+.submission-modal-content {
+    background: #ffffff;
+    color: #000000;
+    padding: 16px;
+    border-radius: 8px;
+    max-width: 400px;
+    width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+    .submission-modal-content {
+        background: #2b2b2b;
+        color: #ffffff;
+    }
+}
+
+/* Action title styled as plain text aligned to the right */
+.plate-button-go {
+    background: none;
+    border: none;
+    color: #2196f3;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    font-size: inherit;
+    text-decoration: none;
+    width: auto;
+}
+.plate-button-row {
+    display: flex;
+    justify-content: flex-end;
+}

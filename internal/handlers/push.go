@@ -12,6 +12,21 @@ import (
 	"time"
 )
 
+const (
+	keyTitle      = "title"
+	keyBody       = "body"
+	keyImage      = "image"
+	keyPriority   = "priority"
+	keySound      = "sound"
+	keyConditions = "conditions"
+)
+
+const (
+	LangRU = "ru"
+	LangEN = "en"
+	LangTJ = "tj"
+)
+
 var (
 	projectIDs = map[string]string{
 		"release": "kurbisomoni",
@@ -45,7 +60,7 @@ func handlePushPost(w http.ResponseWriter, r *http.Request) {
 		localTitle := titleMap[getLang(topic)]
 		localBody := bodyMap[getLang(topic)]
 
-		message := buildMessage(topic, localTitle, localBody, data, projectID)
+		message := buildMessage(topic, localTitle, localBody, data)
 		msgBody, _ := json.Marshal(message)
 
 		fmt.Printf("📦 Отправка в топик %s:\n%s\n", topic, msgBody)
@@ -103,8 +118,8 @@ func preparePushRequest(r *http.Request) (map[string]interface{}, string, *oauth
 	}
 
 	data := extractPushData(req)
-	titleMap, _ := decodeLangMap(req["title"])
-	bodyMap, _ := decodeLangMap(req["body"])
+	titleMap, _ := decodeLangMap(req[keyTitle])
+	bodyMap, _ := decodeLangMap(req[keyBody])
 	normalizeLanguages(titleMap)
 	normalizeLanguages(bodyMap)
 
@@ -115,9 +130,6 @@ func extractPushData(req map[string]interface{}) map[string]string {
 	data := make(map[string]string)
 	if rawData, ok := req["data"].(map[string]interface{}); ok {
 		for k, v := range rawData {
-			if k == "title" || k == "body" || k == "sound" {
-				continue
-			}
 			switch val := v.(type) {
 			case string:
 				data[k] = val
@@ -141,31 +153,31 @@ func decodeLangMap(raw any) (map[string]string, error) {
 }
 
 func normalizeLanguages(m map[string]string) {
-	if ru, ok := m["ru"]; ok {
-		if _, exists := m["en"]; !exists {
-			m["en"] = ru
+	if ru, ok := m[LangRU]; ok {
+		if _, exists := m[LangEN]; !exists {
+			m[LangEN] = ru
 		}
-		if _, exists := m["tj"]; !exists {
-			m["tj"] = ru
+		if _, exists := m[LangTJ]; !exists {
+			m[LangTJ] = ru
 		}
 	}
 }
 
 func generateTopics(data map[string]string) []string {
 	var conditions map[string]string
-	if condRaw, ok := data["conditions"]; ok && condRaw != "" && condRaw != "{}" {
+	if condRaw, ok := data[keyConditions]; ok && condRaw != "" && condRaw != "{}" {
 		_ = json.Unmarshal([]byte(condRaw), &conditions)
 	}
 	var topics []string
 	if versionsStr, ok := conditions["version"]; ok && versionsStr != "" {
 		for _, version := range strings.Split(versionsStr, ",") {
 			version = strings.TrimSpace(version)
-			for _, lang := range []string{"ru", "en", "tj"} {
+			for _, lang := range []string{LangRU, LangEN, LangTJ} {
 				topics = append(topics, fmt.Sprintf("%s_%s", version, lang))
 			}
 		}
 	} else {
-		topics = []string{"ru", "en", "tj"}
+		topics = []string{LangRU, LangEN, LangTJ}
 	}
 	return topics
 }
@@ -178,17 +190,22 @@ func getLang(topic string) string {
 	return topic
 }
 
-func buildMessage(topic, title, body string, data map[string]string, projectID string) map[string]interface{} {
+func buildMessage(topic, title, body string, data map[string]string) map[string]interface{} {
 	notif := map[string]interface{}{"channel_id": "GENERAL"}
-	if s, ok := data["sound"]; ok {
-		if s != "none" && s != "" {
-			notif["sound"] = s
+	if s, ok := data[keySound]; ok {
+		if s == "" || s == "none" {
+			delete(data, keySound)
+		} else {
+			notif[keySound] = s
 		}
 	}
 	priority := "high"
-	if p, ok := data["priority"]; ok {
+	if p, ok := data[keyPriority]; ok {
 		priority = p
 	}
+
+	data[keyTitle] = title // Нужен для аналитки
+	data[keyBody] = body   // Нужен для аналитки
 
 	return map[string]interface{}{
 		"message": map[string]interface{}{
@@ -196,7 +213,7 @@ func buildMessage(topic, title, body string, data map[string]string, projectID s
 			"notification": map[string]interface{}{
 				"title": title,
 				"body":  body,
-				"image": data["image"],
+				"image": data[keyImage],
 			},
 			"android": map[string]interface{}{
 				"priority":     priority,

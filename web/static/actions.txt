@@ -1,0 +1,2 @@
+URL|url
+SHARE TEXT|share_text
