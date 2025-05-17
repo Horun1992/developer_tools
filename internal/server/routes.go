@@ -10,6 +10,8 @@ func RegisterRoutes() {
 	http.HandleFunc("/", serveFile("web/main.html"))
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
+	http.HandleFunc("/banks", middleware.BasicAuth(handlers.BanksHandler))
+
 	// Push routes
 	http.HandleFunc("/push", serveFile("web/push/index.html"))
 	http.HandleFunc("/push/script.js", serveFile("web/push/script.js"))

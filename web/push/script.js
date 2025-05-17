@@ -410,5 +410,68 @@ document.getElementById("pushForm").addEventListener("submit", async function (e
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    loadVersionHistoryFromServer();
+    loadVersionHistoryFromServer().then();
+    // Load bank list into select
+    const bankSelect = document.getElementById("bankId");
+    fetch("/banks")
+        .then(response => response.json())
+        .then(banks => {
+            banks.forEach(bank => {
+                // Parse localized names (JSON string) and pick display name (RU > EN > TJ)
+                let displayName = bank.bank_name;
+                try {
+                    const names = JSON.parse(bank.bank_name);
+                    displayName = names.ru || names.en || names.tj || displayName;
+                } catch (_) {}
+                // Create option with icon and name
+                const opt = document.createElement("option");
+                opt.value = bank.bank_id; // use bank_id as value
+                opt.textContent = displayName;
+                bankSelect.appendChild(opt);
+            });
+            // Build custom dropdown list items
+            const dropdown = document.getElementById("bankDropdown");
+            const selected = dropdown.querySelector(".bank-dropdown-selected");
+            const list = dropdown.querySelector(".bank-dropdown-list");
+
+            // Add a "no selection" option
+            const noneLi = document.createElement("li");
+            noneLi.className = "bank-dropdown-item";
+            noneLi.dataset.value = "";
+            noneLi.textContent = "--Не выбран--";
+            noneLi.addEventListener("click", () => {
+                document.getElementById("bankId").value = "";
+                selected.textContent = "--Выберите банк--";
+                list.style.display = "none";
+            });
+            list.insertBefore(noneLi, list.firstChild);
+
+            banks.forEach(bank => {
+                const names = (() => {
+                    try { return JSON.parse(bank.bank_name); } catch { return {}; }
+                })();
+                const displayName = names.ru || names.en || names.tj || bank.bank_name;
+                const li = document.createElement("li");
+                li.className = "bank-dropdown-item";
+                li.dataset.value = bank.bank_id;
+                li.innerHTML = `<img src="https://e-mcg.ru/static/img/banks_logo/${bank.bank_logo_link}" class="bank-option-icon" /><span>${displayName}</span>`;
+                li.addEventListener("click", () => {
+                    // Set hidden select value
+                    document.getElementById("bankId").value = li.dataset.value;
+                    // Update displayed selected
+                    selected.innerHTML = li.innerHTML;
+                    // Close list
+                    list.style.display = "none";
+                });
+                list.appendChild(li);
+            });
+
+            // Toggle dropdown on click
+            selected.addEventListener("click", () => {
+                list.style.display = list.style.display === "block" ? "none" : "block";
+            });
+        })
+        .catch(error => {
+            console.error("Error loading banks:", error);
+        });
 });

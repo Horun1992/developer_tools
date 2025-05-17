@@ -63,7 +63,7 @@ func handlePushPost(w http.ResponseWriter, r *http.Request) {
 		message := buildMessage(topic, localTitle, localBody, data)
 		msgBody, _ := json.Marshal(message)
 
-		fmt.Printf("📦 Отправка в топик %s:\n%s\n", topic, msgBody)
+		fmt.Printf("\n📦 Отправка в топик %s:\n%s\n", topic, msgBody)
 		resp, err := sendFCMRequest(projectID, token.AccessToken, msgBody)
 		if resp != nil {
 			defer resp.Body.Close()

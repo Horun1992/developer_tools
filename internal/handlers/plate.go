@@ -1,18 +1,11 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	_ "os"
 	"time"
 )
-
-var db *sql.DB
-
-func InitPlateHandler(database *sql.DB) {
-	db = database
-}
 
 func SavePlateHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {

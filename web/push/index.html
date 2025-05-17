@@ -77,6 +77,17 @@
             <option value="normal">Normal</option>
         </select>
 
+            <div class="form-group">
+            <label for="bankId">Избранный Банк</label>
+            <select id="bankId" style="display: none;">
+                <option value="">--Выберите банк--</option>
+            </select>
+            <div class="bank-dropdown" id="bankDropdown">
+                <div class="bank-dropdown-selected">--Выберите банк--</div>
+                <ul class="bank-dropdown-list"></ul>
+            </div>
+        </div>
+
         <label>Версия приложения</label>
         <div class="lang-group">
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
@@ -97,10 +108,6 @@
             <div id="appVersionList" style="margin-top: 12px;"></div>
         </div>
         <input type="hidden" id="pushConditions" value=''>
-        <div class="form-group">
-            <label for="bankId">Номер банка</label>
-            <input type="text" id="bankId" placeholder="Введите номер банка" />
-        </div>
 
         <div class="checkbox-group">
             <input type="checkbox" id="includeSound">
